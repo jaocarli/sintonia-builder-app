@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,28 +14,34 @@ import RecipeDetail from "./pages/RecipeDetail";
 import UserProfile from "./pages/UserProfile";
 import AddRecipe from "./pages/AddRecipe";
 
+// Create a client
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/workout/:id" element={<WorkoutDetail />} />
-          <Route path="/social" element={<Social />} />
-          <Route path="/recipes" element={<Recipes />} />
-          <Route path="/recipes/:id" element={<RecipeDetail />} />
-          <Route path="/add-recipe" element={<AddRecipe />} />
-          <Route path="/profile/:id" element={<UserProfile />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+// Make sure App is a proper React component function
+const App = () => {
+  return (
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/workout/:id" element={<WorkoutDetail />} />
+              <Route path="/social" element={<Social />} />
+              <Route path="/recipes" element={<Recipes />} />
+              <Route path="/recipes/:id" element={<RecipeDetail />} />
+              <Route path="/add-recipe" element={<AddRecipe />} />
+              <Route path="/profile/:id" element={<UserProfile />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
+  );
+};
 
 export default App;

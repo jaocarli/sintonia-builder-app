@@ -1,290 +1,298 @@
 
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import Header from '@/components/Header';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { 
   User, 
-  MessageCircle, 
+  Calendar, 
   Dumbbell, 
   Trophy, 
-  UtensilsCrossed, 
-  FileText, 
-  Calendar, A 
+  Clock, 
+  MessageSquare, 
+  Share2,
+  Heart,
+  Send
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import Header from '@/components/Header';
+import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { workouts } from '@/data/workouts';
-import { recipes } from '@/data/recipes';
-import { useIsMobile } from '@/hooks/use-mobile';
+import WorkoutCard from '@/components/WorkoutCard';
 
-// Mock user data
-const userData = {
-  id: "me",
-  name: "Carlos Silva",
-  username: "@carlossilva",
-  avatar: null,
-  bio: "Entusiasta de fitness, nutrição e bem-estar. Treinando há 3 anos e sempre em busca de novos desafios!",
-  joinedDate: "Março 2022",
-  stats: {
-    workouts: 48,
-    streak: 12,
-    followers: 124,
-    following: 56,
+// User profile data (mock)
+const userProfiles = {
+  me: {
+    id: "me",
+    name: "João Silva",
+    username: "@joaosilva",
+    bio: "Apaixonado por treinos e vida saudável. Nutricionista 🥦 e Personal Trainer 💪",
+    avatar: "/placeholder.svg",
+    following: 245,
+    followers: 1253,
+    joinedDate: "Março 2023",
+    completedWorkouts: 86,
+    streakDays: 14,
+    posts: [
+      {
+        id: 1,
+        content: "Completei mais um treino hoje! Superando meus limites 💪",
+        date: "2h atrás",
+        likes: 24,
+        comments: 5
+      },
+      {
+        id: 2,
+        content: "Nova receita de smoothie pós-treino: banana, whey, aveia e pasta de amendoim. Delicioso e nutritivo!",
+        date: "2d atrás",
+        likes: 42,
+        comments: 12
+      }
+    ]
+  },
+  user1: {
+    id: "user1",
+    name: "Maria Oliveira",
+    username: "@mariaoliveira",
+    bio: "Fitness enthusiast. Compartilhando minha jornada de saúde e bem-estar.",
+    avatar: "/placeholder.svg",
+    following: 187,
+    followers: 932,
+    joinedDate: "Janeiro 2023",
+    completedWorkouts: 124,
+    streakDays: 30,
+    posts: [
+      {
+        id: 1,
+        content: "Novo recorde pessoal no agachamento hoje! 💪",
+        date: "5h atrás",
+        likes: 56,
+        comments: 8
+      }
+    ]
   }
 };
 
-const UserProfile = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const isMobile = useIsMobile();
-  const [isFollowing, setIsFollowing] = useState(false);
-  
-  // Filter workouts and recipes
-  const userWorkouts = workouts.filter(workout => workout.id < 5);
-  const userRecipes = recipes.filter(recipe => recipe.id < 3);
-  
-  const handleFollowClick = () => {
-    setIsFollowing(!isFollowing);
-    
-    toast({
-      title: isFollowing ? "Deixou de seguir" : "Agora seguindo",
-      description: isFollowing 
-        ? `Você deixou de seguir ${userData.name}.` 
-        : `Você está seguindo ${userData.name}.`,
-    });
-  };
-  
-  const handleMessageClick = () => {
-    toast({
-      title: "Mensagem",
-      description: `Iniciando conversa com ${userData.name}.`,
-    });
-    
-    navigate('/social');
-  };
+// Filter completed workouts for the user
+const getCompletedWorkouts = (userId: string) => {
+  return workouts.filter(workout => workout.completed);
+};
 
+const UserProfile = () => {
+  const { id = "me" } = useParams();
+  const [commentText, setCommentText] = useState("");
+  const profile = userProfiles[id as keyof typeof userProfiles] || userProfiles.me;
+  const completedWorkouts = getCompletedWorkouts(id);
+  
+  // Check if it's the user's own profile
+  const isOwnProfile = id === "me";
+  
   return (
-    <div className="min-h-screen flex flex-col pb-6">
+    <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <main className="container px-4 py-6 flex-1">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Profile sidebar */}
-          <div className="lg:col-span-1">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center text-center">
-                  <Avatar className="h-24 w-24 mb-4">
-                    <AvatarFallback className="text-lg bg-primary text-primary-foreground">
-                      {userData.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                    {userData.avatar && (
-                      <AvatarImage src={userData.avatar} alt={userData.name} />
-                    )}
-                  </Avatar>
-                  
-                  <h1 className="text-xl font-bold mb-1">{userData.name}</h1>
-                  <p className="text-sm text-muted-foreground mb-4">{userData.username}</p>
-                  
-                  <div className="w-full flex gap-2 mb-6">
-                    <Button 
-                      className="flex-1" 
-                      variant={isFollowing ? "outline" : "default"}
-                      onClick={handleFollowClick}
-                    >
-                      {isFollowing ? "Seguindo" : "Seguir"}
-                    </Button>
-                    
-                    <Button 
-                      variant="outline" 
-                      size="icon"
-                      onClick={handleMessageClick}
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  <p className="text-sm mb-6">{userData.bio}</p>
-                  
-                  <div className="grid grid-cols-2 w-full gap-4 mb-4">
-                    <div className="text-center">
-                      <p className="text-muted-foreground text-xs">Treinos</p>
-                      <p className="font-bold">{userData.stats.workouts}</p>
-                    </div>
-                    
-                    <div className="text-center">
-                      <p className="text-muted-foreground text-xs">Sequência</p>
-                      <p className="font-bold">{userData.stats.streak} dias</p>
-                    </div>
-                    
-                    <div className="text-center">
-                      <p className="text-muted-foreground text-xs">Seguidores</p>
-                      <p className="font-bold">{userData.stats.followers}</p>
-                    </div>
-                    
-                    <div className="text-center">
-                      <p className="text-muted-foreground text-xs">Seguindo</p>
-                      <p className="font-bold">{userData.stats.following}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <Calendar className="h-3 w-3 mr-1" />
-                    <span>Entrou em {userData.joinedDate}</span>
-                  </div>
+      <main className="container px-4 py-6">
+        {/* Profile Header */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+            <Avatar className="w-24 h-24 border-4 border-white shadow">
+              <AvatarImage src={profile.avatar} alt={profile.name} />
+              <AvatarFallback>
+                <User size={32} />
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold">{profile.name}</h1>
+              <p className="text-muted-foreground">{profile.username}</p>
+              <p className="mt-2 text-sm max-w-xl">{profile.bio}</p>
+              
+              <div className="flex flex-wrap items-center gap-4 mt-3 text-sm">
+                <div className="flex items-center gap-1">
+                  <span className="font-medium">{profile.following}</span>
+                  <span className="text-muted-foreground">Seguindo</span>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="flex items-center gap-1">
+                  <span className="font-medium">{profile.followers}</span>
+                  <span className="text-muted-foreground">Seguidores</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Calendar size={16} className="text-muted-foreground" />
+                  <span className="text-muted-foreground">Entrou em {profile.joinedDate}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="w-full md:w-auto">
+              {isOwnProfile ? (
+                <Button variant="outline">Editar Perfil</Button>
+              ) : (
+                <Button>Seguir</Button>
+              )}
+            </div>
           </div>
           
-          {/* Main content - Tabs with workouts, achievements, recipes */}
-          <div className="lg:col-span-3">
-            <Tabs defaultValue="workouts">
-              <TabsList className="w-full grid grid-cols-3 mb-6">
-                <TabsTrigger value="workouts" className="flex items-center gap-1">
-                  <Dumbbell className="h-4 w-4" />
-                  <span className={isMobile ? "hidden" : "inline"}>Treinos</span>
-                </TabsTrigger>
-                <TabsTrigger value="recipes" className="flex items-center gap-1">
-                  <UtensilsCrossed className="h-4 w-4" />
-                  <span className={isMobile ? "hidden" : "inline"}>Receitas</span>
-                </TabsTrigger>
-                <TabsTrigger value="achievements" className="flex items-center gap-1">
-                  <Trophy className="h-4 w-4" />
-                  <span className={isMobile ? "hidden" : "inline"}>Conquistas</span>
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="workouts" className="mt-0">
-                <h2 className="text-xl font-semibold mb-4">Treinos Recentes</h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {userWorkouts.map(workout => (
-                    <Card 
-                      key={workout.id} 
-                      className="cursor-pointer hover:shadow-md transition-shadow"
-                      onClick={() => navigate(`/workout/${workout.id}`)}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-3">
-                          <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                            workout.type === 'strength' ? 'bg-blue-100 text-fitness-blue' : 
-                            workout.type === 'cardio' ? 'bg-red-100 text-fitness-red' : 
-                            'bg-green-100 text-fitness-green'
-                          }`}>
-                            <Dumbbell className="h-5 w-5" />
-                          </div>
-                          
-                          <div className="flex-1">
-                            <h3 className="font-medium">{workout.name}</h3>
-                            <p className="text-sm text-muted-foreground mb-2">
-                              {workout.exercises.length} exercícios • {workout.duration} min
-                            </p>
-                            
-                            {workout.completed ? (
-                              <div className="flex items-center text-xs text-green-600">
-                                <div className="h-2 w-2 rounded-full bg-green-600 mr-1" />
-                                <span>Concluído</span>
-                              </div>
-                            ) : (
-                              <div className="flex items-center text-xs text-blue-600">
-                                <div className="h-2 w-2 rounded-full bg-blue-600 mr-1" />
-                                <span>Pendente</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="recipes" className="mt-0">
-                <h2 className="text-xl font-semibold mb-4">Receitas Compartilhadas</h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {userRecipes.map(recipe => (
-                    <Card 
-                      key={recipe.id} 
-                      className="cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
-                      onClick={() => navigate(`/recipes/${recipe.id}`)}
-                    >
-                      {recipe.image && (
-                        <div className="h-32 w-full">
-                          <img 
-                            src={recipe.image} 
-                            alt={recipe.title} 
-                            className="h-full w-full object-cover"
-                          />
-                        </div>
-                      )}
-                      
-                      <CardContent className="p-4">
-                        <h3 className="font-medium">{recipe.title}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                          {recipe.description}
-                        </p>
-                        
-                        <div className="flex items-center justify-between mt-3">
-                          <div className="flex items-center text-xs text-muted-foreground">
-                            <UtensilsCrossed className="h-3 w-3 mr-1" />
-                            <span>{recipe.difficulty}</span>
-                          </div>
-                          
-                          <div className="flex items-center text-xs text-muted-foreground">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            <span>{recipe.time} min</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="achievements" className="mt-0">
-                <h2 className="text-xl font-semibold mb-4">Conquistas</h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {[
-                    { name: "Iniciante", description: "Completou o primeiro treino", date: "10/03/2022", icon: <Dumbbell /> },
-                    { name: "Consistente", description: "7 dias consecutivos de treino", date: "21/05/2022", icon: <Calendar /> },
-                    { name: "Chef Saudável", description: "Compartilhou 5 receitas", date: "15/08/2022", icon: <UtensilsCrossed /> },
-                    { name: "Atleta", description: "Completou 30 treinos", date: "03/11/2022", icon: <Trophy /> },
-                    { name: "Social", description: "Conectou-se com 10 pessoas", date: "22/01/2023", icon: <User /> },
-                    { name: "Especialista", description: "Concluiu todos os treinos do mês", date: "28/02/2023", icon: <FileText /> },
-                  ].map((achievement, index) => (
-                    <Card key={index}>
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-3">
-                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                            {achievement.icon}
-                          </div>
-                          
-                          <div>
-                            <h3 className="font-medium">{achievement.name}</h3>
-                            <p className="text-sm text-muted-foreground mb-1">
-                              {achievement.description}
-                            </p>
-                            <div className="flex items-center text-xs text-muted-foreground">
-                              <Calendar className="h-3 w-3 mr-1" />
-                              <span>{achievement.date}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </TabsContent>
-            </Tabs>
+          <div className="grid grid-cols-3 gap-4 mt-6 border rounded-lg p-4">
+            <div className="text-center">
+              <div className="flex justify-center">
+                <Dumbbell size={24} className="text-primary mb-2" />
+              </div>
+              <div className="font-bold text-xl">{profile.completedWorkouts}</div>
+              <div className="text-xs text-muted-foreground">Treinos</div>
+            </div>
+            <div className="text-center">
+              <div className="flex justify-center">
+                <Trophy size={24} className="text-yellow-500 mb-2" />
+              </div>
+              <div className="font-bold text-xl">{profile.streakDays}</div>
+              <div className="text-xs text-muted-foreground">Dias consecutivos</div>
+            </div>
+            <div className="text-center">
+              <div className="flex justify-center">
+                <Clock size={24} className="text-green-500 mb-2" />
+              </div>
+              <div className="font-bold text-xl">24h</div>
+              <div className="text-xs text-muted-foreground">Total de treino</div>
+            </div>
           </div>
         </div>
+        
+        {/* Profile Tabs */}
+        <Tabs defaultValue="posts" className="w-full">
+          <TabsList className="grid grid-cols-3 mb-6">
+            <TabsTrigger value="posts">Atividades</TabsTrigger>
+            <TabsTrigger value="workouts">Treinos</TabsTrigger>
+            <TabsTrigger value="achievements">Conquistas</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="posts" className="space-y-6">
+            {isOwnProfile && (
+              <Card>
+                <CardContent className="pt-6">
+                  <Textarea 
+                    placeholder="Compartilhe como foi seu treino hoje..." 
+                    className="resize-none mb-4"
+                  />
+                  <div className="flex justify-end">
+                    <Button>Publicar</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {profile.posts.map(post => (
+              <Card key={post.id}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-start gap-4">
+                    <Avatar>
+                      <AvatarImage src={profile.avatar} alt={profile.name} />
+                      <AvatarFallback>
+                        <User size={16} />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-medium">{profile.name}</div>
+                      <div className="text-xs text-muted-foreground">{post.date}</div>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p>{post.content}</p>
+                  
+                  <div className="flex items-center gap-4 mt-4">
+                    <Button variant="ghost" size="sm" className="text-muted-foreground">
+                      <Heart size={18} className="mr-1" />
+                      {post.likes}
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-muted-foreground">
+                      <MessageSquare size={18} className="mr-1" />
+                      {post.comments}
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-muted-foreground">
+                      <Share2 size={18} className="mr-1" />
+                      Compartilhar
+                    </Button>
+                  </div>
+                  
+                  <Separator className="my-4" />
+                  
+                  <div className="flex items-center gap-3 mt-2">
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src={isOwnProfile ? profile.avatar : userProfiles.me.avatar} />
+                      <AvatarFallback>
+                        <User size={14} />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 relative">
+                      <Textarea 
+                        placeholder="Adicione um comentário..." 
+                        className="resize-none pr-10 py-2 min-h-0"
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                      />
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="h-8 w-8 absolute right-2 top-1/2 transform -translate-y-1/2"
+                        disabled={!commentText.trim()}
+                      >
+                        <Send size={16} />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </TabsContent>
+          
+          <TabsContent value="workouts">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold mb-4">Treinos Concluídos</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {completedWorkouts.map(workout => (
+                  <WorkoutCard key={workout.id} workout={workout} className="bg-white shadow-sm" />
+                ))}
+              </div>
+              
+              {completedWorkouts.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>Nenhum treino concluído ainda</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="achievements">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <Card>
+                <CardContent className="pt-6 text-center">
+                  <Trophy size={48} className="mx-auto mb-4 text-yellow-500" />
+                  <h3 className="font-bold text-lg mb-1">Primeira Semana</h3>
+                  <p className="text-sm text-muted-foreground">Completou 7 dias consecutivos de treino</p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="pt-6 text-center">
+                  <Dumbbell size={48} className="mx-auto mb-4 text-blue-500" />
+                  <h3 className="font-bold text-lg mb-1">Mestre do Supino</h3>
+                  <p className="text-sm text-muted-foreground">Completou 50 séries de supino</p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="pt-6 text-center">
+                  <Clock size={48} className="mx-auto mb-4 text-green-500" />
+                  <h3 className="font-bold text-lg mb-1">Maratonista</h3>
+                  <p className="text-sm text-muted-foreground">Treinou por mais de 20 horas no total</p>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
