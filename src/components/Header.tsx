@@ -1,9 +1,10 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Dumbbell, User, Menu } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Dumbbell, User, Menu, X, MessageCircle, UtensilsCrossed } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 interface HeaderProps {
   title?: string;
@@ -12,10 +13,24 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ title = "Treino em Sintonia" }) => {
   const isMobile = useIsMobile();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const location = useLocation();
+  
+  const navItems = [
+    { name: "Dashboard", path: "/", icon: <Dumbbell size={18} /> },
+    { name: "Social", path: "/social", icon: <MessageCircle size={18} /> },
+    { name: "Receitas", path: "/recipes", icon: <UtensilsCrossed size={18} /> },
+    { name: "Perfil", path: "/profile/me", icon: <User size={18} /> }
+  ];
+  
+  const isActive = (path: string) => {
+    if (path === "/" && location.pathname === "/") return true;
+    if (path !== "/" && location.pathname.startsWith(path)) return true;
+    return false;
+  };
 
   return (
     <header className="sticky top-0 z-30 w-full bg-white border-b shadow-sm">
-      <div className="container flex h-16 items-center justify-between py-4">
+      <div className="container px-4 flex h-16 items-center justify-between py-4">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
             <Dumbbell size={24} className="text-fitness-blue" />
@@ -24,51 +39,56 @@ const Header: React.FC<HeaderProps> = ({ title = "Treino em Sintonia" }) => {
         </div>
 
         {isMobile ? (
-          <div className="relative">
+          <>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label="Toggle menu"
             >
-              <Menu size={24} />
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </Button>
             
             {isMenuOpen && (
-              <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                <div className="py-1" role="menu" aria-orientation="vertical">
-                  <Link to="/" 
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Dashboard
-                  </Link>
-                  <Link to="/workouts" 
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Treinos
-                  </Link>
-                  <Link to="/profile" 
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Perfil
-                  </Link>
-                </div>
+              <div className="absolute top-16 left-0 right-0 bg-white border-b shadow-md z-40">
+                <nav className="container px-4 py-2 flex flex-col space-y-2">
+                  {navItems.map((item) => (
+                    <Link 
+                      key={item.path}
+                      to={item.path} 
+                      className={cn(
+                        "flex items-center gap-2 px-4 py-3 rounded-md transition-colors",
+                        isActive(item.path)
+                          ? "bg-primary/10 text-primary font-medium"
+                          : "hover:bg-secondary"
+                      )}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {item.icon}
+                      <span>{item.name}</span>
+                    </Link>
+                  ))}
+                </nav>
               </div>
             )}
-          </div>
+          </>
         ) : (
-          <nav className="flex items-center space-x-6">
-            <Link to="/" className="text-sm font-medium transition-colors hover:text-primary">
-              Dashboard
-            </Link>
-            <Link to="/workouts" className="text-sm font-medium transition-colors hover:text-primary">
-              Treinos
-            </Link>
-            <Link to="/profile" className="flex items-center justify-center h-10 w-10 rounded-full bg-muted text-muted-foreground">
-              <User size={20} />
-            </Link>
+          <nav className="flex items-center space-x-1">
+            {navItems.map((item, index) => (
+              <Link 
+                key={item.path}
+                to={item.path} 
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  isActive(item.path) 
+                    ? "bg-primary/10 text-primary" 
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                )}
+              >
+                {item.icon}
+                <span>{item.name}</span>
+              </Link>
+            ))}
           </nav>
         )}
       </div>
