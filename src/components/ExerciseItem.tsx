@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Dumbbell, Clock, RefreshCw, Info } from 'lucide-react';
+import { Dumbbell, Clock, RefreshCw, Info, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
   Tooltip,
@@ -8,23 +8,49 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
 import type { Exercise } from '@/data/workouts';
 
 interface ExerciseItemProps {
   exercise: Exercise;
   index: number;
   className?: string;
+  isActive: boolean;
+  isCompleted: boolean;
+  currentSet: number;
+  totalSets: number;
+  restTimeRemaining: number | null;
+  onCompleteSet: () => void;
 }
 
 const ExerciseItem: React.FC<ExerciseItemProps> = ({ 
   exercise, 
   index,
-  className 
+  className,
+  isActive,
+  isCompleted,
+  currentSet,
+  totalSets,
+  restTimeRemaining,
+  onCompleteSet
 }) => {
   return (
-    <div className={cn('exercise-item', className)}>
-      <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 text-primary font-medium">
-        {index + 1}
+    <div 
+      className={cn(
+        'exercise-item transition-all', 
+        isActive && 'border-2 border-primary bg-primary/5',
+        isCompleted && 'opacity-70',
+        className
+      )}
+    >
+      <div className={cn(
+        "flex items-center justify-center h-10 w-10 rounded-full font-medium",
+        isCompleted ? "bg-green-500/20 text-green-600" : "bg-primary/10 text-primary",
+        isActive && "bg-primary text-primary-foreground"
+      )}>
+        {isCompleted ? <CheckCircle size={18} /> : index + 1}
       </div>
       
       <div className="flex-1">
@@ -64,6 +90,44 @@ const ExerciseItem: React.FC<ExerciseItemProps> = ({
             <span>{exercise.rest}s descanso</span>
           </div>
         </div>
+
+        {isActive && !isCompleted && (
+          <div className="mt-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">
+                Progresso: {currentSet}/{totalSets} séries
+              </span>
+              <span className="text-sm text-muted-foreground">
+                {(currentSet / totalSets * 100).toFixed(0)}%
+              </span>
+            </div>
+            <Progress value={currentSet / totalSets * 100} className="h-2" />
+            
+            {restTimeRemaining ? (
+              <div className="bg-secondary p-3 rounded-md">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium">Tempo de descanso</span>
+                  <span className="text-sm font-semibold">{restTimeRemaining}s</span>
+                </div>
+                <Progress value={(restTimeRemaining / exercise.rest) * 100} className="h-2" />
+              </div>
+            ) : (
+              <Button 
+                className="w-full mt-2" 
+                onClick={onCompleteSet}
+              >
+                {currentSet < totalSets ? "Completar série" : "Finalizar exercício"}
+              </Button>
+            )}
+          </div>
+        )}
+
+        {isCompleted && (
+          <div className="mt-2 flex items-center gap-2 text-green-600">
+            <CheckCircle size={16} />
+            <span className="text-sm font-medium">Exercício completo</span>
+          </div>
+        )}
       </div>
     </div>
   );
